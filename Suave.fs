@@ -23,6 +23,33 @@ module Successful =
         |> Some
         |> async.Return
 
+module Combinators =
+    let compose first second context = async {
+        let! firstContext = first context
+        match firstContext with
+        | None -> return None
+        | Some context ->
+            let! secondContext = second context
+            return secondContext
+    }
+
+    // infix operator for compose
+    let (>=>) = compose
+
+module Filters =
+    open Http
+
+    // (Context -> bool) -> Context -> Async<Context option>
+    let iff condition context =
+        if condition context then
+            context |> Some |> async.Return
+        else
+            None |> async.Return
+
+    let GET = iff (fun context -> context.Request.Type = GET)
+    let POST = iff (fun context -> context.Request.Type = POST)
+    let Path path = iff (fun context -> context.Request.Route = path)
+
 module Console =
     open Http
 
@@ -43,6 +70,7 @@ module Console =
         let parts = input.Split([|';'|])
         let rawType = parts.[0]
         let route = parts.[1]
+
         match rawType with
         | "GET" -> { Type = GET; Route = route }
         | "POST" -> { Type = POST; Route = route }

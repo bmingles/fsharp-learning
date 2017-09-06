@@ -4,6 +4,8 @@ module MiniSuave
 open Suave.Http
 open Suave.Console
 open Suave.Successful
+open Suave.Combinators
+open Suave.Filters
 
 [<EntryPoint>]
 let main argv =
@@ -11,6 +13,6 @@ let main argv =
     let response = { Content = ""; StatusCode = 200 }
     let context = { Request = request; Response = response }
 
-    execute context (OK "Hello World!")
+    executeInLoop context (GET >=> Path "/hello" >=> OK "hello")
 
     0
